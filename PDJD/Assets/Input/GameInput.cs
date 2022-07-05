@@ -25,6 +25,14 @@ public class @GameInput : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Jump"",
+                    ""type"": ""Button"",
+                    ""id"": ""394a72b3-0fd9-423d-83fa-0c2e69e4aeaf"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -137,6 +145,17 @@ public class @GameInput : IInputActionCollection, IDisposable
                     ""action"": ""Movements"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""299fd506-d10e-40d0-b24d-9971db69b633"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Jump"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -164,6 +183,7 @@ public class @GameInput : IInputActionCollection, IDisposable
         // gameplay
         m_gameplay = asset.FindActionMap("gameplay", throwIfNotFound: true);
         m_gameplay_Movements = m_gameplay.FindAction("Movements", throwIfNotFound: true);
+        m_gameplay_Jump = m_gameplay.FindAction("Jump", throwIfNotFound: true);
         // menu
         m_menu = asset.FindActionMap("menu", throwIfNotFound: true);
     }
@@ -216,11 +236,13 @@ public class @GameInput : IInputActionCollection, IDisposable
     private readonly InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;
     private readonly InputAction m_gameplay_Movements;
+    private readonly InputAction m_gameplay_Jump;
     public struct GameplayActions
     {
         private @GameInput m_Wrapper;
         public GameplayActions(@GameInput wrapper) { m_Wrapper = wrapper; }
         public InputAction @Movements => m_Wrapper.m_gameplay_Movements;
+        public InputAction @Jump => m_Wrapper.m_gameplay_Jump;
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -233,6 +255,9 @@ public class @GameInput : IInputActionCollection, IDisposable
                 @Movements.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMovements;
                 @Movements.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMovements;
                 @Movements.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMovements;
+                @Jump.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
+                @Jump.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
+                @Jump.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJump;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -240,6 +265,9 @@ public class @GameInput : IInputActionCollection, IDisposable
                 @Movements.started += instance.OnMovements;
                 @Movements.performed += instance.OnMovements;
                 @Movements.canceled += instance.OnMovements;
+                @Jump.started += instance.OnJump;
+                @Jump.performed += instance.OnJump;
+                @Jump.canceled += instance.OnJump;
             }
         }
     }
@@ -281,6 +309,7 @@ public class @GameInput : IInputActionCollection, IDisposable
     public interface IGameplayActions
     {
         void OnMovements(InputAction.CallbackContext context);
+        void OnJump(InputAction.CallbackContext context);
     }
     public interface IMenuActions
     {

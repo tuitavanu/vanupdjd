@@ -7,12 +7,23 @@ using UnityEngine.InputSystem;
 
 public class PlayerControle : MonoBehaviour
 {
+    public int coins = 0;
+    public float moveSpeed;
+    public float maxVelocity;
+
+    public float rayDistance;
+    public LayerMask groundLayer;
+    public float JampForce;
+    
+    
     public float movespeed; 
     private GameInput _GameInput;
     private PlayerInput _playerControle;
     private Camera _maincamera;
     private Rigidbody _rigidbody;
     private Vector2 _movement;
+    
+    private bool _isGrounded;
 
     private void OnEnable()
     {
@@ -47,24 +58,80 @@ public class PlayerControle : MonoBehaviour
             
 
         }
-        
-        
+        if (obj.action.name.CompareTo(_GameInput.gameplay.Jump.name) == 0)
+        {
+            if (obj.performed)
+            {
+                Jump();
+            }
+            
+        }
+
+    }
+
+    private void Jump()
+    {
+        if (_isGrounded)
+        {
+            _rigidbody.AddForce(Vector3.up* JampForce, ForceMode.Impulse);
+        }
     }
 
     private void Move()
-        //calcule o movimento no eixo da camera para o movimrnto frente/tras
     {
+        Vector3 camForward = _maincamera.transform.forward;
+        camForward.y = 0;
+        // calcula o movimento no eixo da camera para o movimento frente/tras
+        Vector3 moveVertical = camForward * _movement.y;
+
+        Vector3 camRight = _maincamera.transform.right;
+        camRight.y = 0;
+        // calcula o movimento no eixo da camera para o movimento esquerda/direita
+        Vector3 moverHorizontal = camRight * _movement.x;
+        
+        // adiciona a força no objeto atraves do rigidbory com intensidade definida por moverSpeed
+        _rigidbody.AddForce((moveVertical + moverHorizontal) * moveSpeed * Time.fixedDeltaTime);
+        
+    }
+
+    private void FixedUpdate()
+    {
+        Move();
+        LimitVelocity();
+    }
+
+    private void LimitVelocity()
+    {
+        
+    }
+    private void Move()
+        
+    {
+        //calcule o movimento no eixo da camera para o movimento frente/tras
         Vector3 moveVertical = _maincamera.transform.forward * _movement.y;
         
         //calcule o movimento no eixo  da camera para o movimento esquerda/direita
         Vector3 moveHorizontal = _maincamera.transform.right * _movement.x;
         
         //adicione a força no objeto atraves do rigidbody, com intensidade definida por moveSpeed
-        _rigidbody.AddForce((moveVertical + moveHorizontal) * movespeed * Time.fixedDeltaTime);
+        _rigidbody.AddForce((moveVertical + moveHorizontal) * moveSpeed * Time.fixedDeltaTime);
     }
 
     private void FixedUpdate()
     {
         Move();
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Coin"))
+        {
+            coins++;
+            Destroy(other.gameObject);
+        }
+    }
 }
+        
+    
+
+   
