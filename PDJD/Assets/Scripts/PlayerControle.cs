@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,15 +9,14 @@ using UnityEngine.InputSystem;
 public class PlayerControle : MonoBehaviour
 {
     public int coins = 0;
+
+    public TMP_Text coinText;
     public float moveSpeed;
     public float maxVelocity;
-
     public float rayDistance;
-    public LayerMask groundLayer;
-    public float JampForce;
+    public LayerMask isgroundedLayer;
+    public float JumpForce;
     
-    
-    public float movespeed; 
     private GameInput _GameInput;
     private PlayerInput _playerControle;
     private Camera _maincamera;
@@ -59,26 +59,33 @@ public class PlayerControle : MonoBehaviour
 
         }
         if (obj.action.name.CompareTo(_GameInput.gameplay.Jump.name) == 0)
-        {
-            if (obj.performed)
+        
+          
             {
-                Jump();
+                if(obj.performed) Jump();
             }
-            
-        }
 
     }
 
     private void Jump()
     {
-        if (_isGrounded)
-        {
-            _rigidbody.AddForce(Vector3.up* JampForce, ForceMode.Impulse);
-        }
+        if (_isGrounded) _rigidbody.AddForce(Vector3.up * JumpForce, ForceMode.Impulse);
+    }
+
+    private void CheckGround()
+    {
+        _isGrounded = Physics.Raycast(origin: transform.position, direction: Vector3.down, rayDistance, isgroundedLayer);
+    }
+
+    private void Update()
+    {
+        
+        CheckGround();
     }
 
     private void Move()
     {
+        
         Vector3 camForward = _maincamera.transform.forward;
         camForward.y = 0;
         // calcula o movimento no eixo da camera para o movimento frente/tras
@@ -102,31 +109,25 @@ public class PlayerControle : MonoBehaviour
 
     private void LimitVelocity()
     {
-        
-    }
-    private void Move()
-        
-    {
-        //calcule o movimento no eixo da camera para o movimento frente/tras
-        Vector3 moveVertical = _maincamera.transform.forward * _movement.y;
-        
-        //calcule o movimento no eixo  da camera para o movimento esquerda/direita
-        Vector3 moveHorizontal = _maincamera.transform.right * _movement.x;
-        
-        //adicione a força no objeto atraves do rigidbody, com intensidade definida por moveSpeed
-        _rigidbody.AddForce((moveVertical + moveHorizontal) * moveSpeed * Time.fixedDeltaTime);
-    }
+        // pegar a velocidade doplayer
+        Vector3 velocity = _rigidbody.velocity;
 
-    private void FixedUpdate()
-    {
-        Move();
-    }
+        //checar se a velocidade está dentro dos limites nos diferentes eixos
+        // limitando o eixo x usando ifs, abs e sign.
+        if (Math.Abs(velocity.x) > maxVelocity) velocity.x = Mathf.Sign(velocity.x) * maxVelocity;
 
+        // maxVelocity < velocity.z < maxVelocity
+        velocity.z = Mathf.Clamp(value: velocity.z, min:-maxVelocity, maxVelocity);
+
+        //alterar a velocidade do player para ficar dentro dos limites
+        _rigidbody.velocity = velocity;
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Coin"))
         {
             coins++;
+            coinText.text = coins.ToString();
             Destroy(other.gameObject);
         }
     }
